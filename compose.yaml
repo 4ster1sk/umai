@@ -1,0 +1,13 @@
+services:
+  umai:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      # プロバイダーを選択 (anthropic / openai / gemini)
+      LLM_PROVIDER: ${LLM_PROVIDER:-anthropic}
+      # 使用するモデルを上書きしたい場合（省略時はプロバイダーのデフォルト）
+      # LLM_MODEL: claude-opus-4-6
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
