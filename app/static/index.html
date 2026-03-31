@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>umai 分析</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 0 16px; }
+    h1 { font-size: 1.6rem; }
+    #meta { color: #666; font-size: 0.85rem; margin-bottom: 16px; }
+    #analyze-btn {
+      padding: 10px 24px; font-size: 1rem; cursor: pointer;
+      background: #333; color: #fff; border: none; border-radius: 6px;
+    }
+    #analyze-btn:disabled { background: #999; cursor: default; }
+    #result {
+      margin-top: 24px; white-space: pre-wrap; line-height: 1.7;
+      background: #f8f8f8; border-radius: 6px; padding: 16px;
+      min-height: 80px;
+    }
+  </style>
+</head>
+<body>
+  <h1>umai 分析</h1>
+  <div id="meta">読み込み中...</div>
+  <button id="analyze-btn" onclick="analyze()">分析する</button>
+  <div id="result"></div>
+
+  <script>
+    async function loadMeta() {
+      const res = await fetch('/api/data');
+      const json = await res.json();
+      const cats = Object.entries(json.categories)
+        .map(([k, v]) => `${k} (${v.length}件)`)
+        .join(' / ');
+      document.getElementById('meta').textContent =
+        `プロバイダー: ${json.provider}  モデル: ${json.model}  |  ${cats}`;
+    }
+
+    async function analyze() {
+      const btn = document.getElementById('analyze-btn');
+      const result = document.getElementById('result');
+      btn.disabled = true;
+      result.textContent = '';
+
+      try {
+        const res = await fetch('/api/analyze', { method: 'POST' });
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          result.textContent += decoder.decode(value, { stream: true });
+        }
+      } catch (e) {
+        result.textContent = 'エラーが発生しました: ' + e.message;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    loadMeta();
+  </script>
+</body>
+</html>
